@@ -29,10 +29,6 @@ func main() {
 			fmt.Fprintf(rw, "This method is not allowed\n")
 			return
 		}
-		if !strings.HasPrefix(req.URL.Path, "/wind") {
-			rw.WriteHeader(fsthttp.StatusNotFound)
-			fmt.Fprintf(rw, "The page you requested could not be found\n")
-		}
 		ip := net.ParseIP(req.RemoteAddr)
 		if ip == nil {
 			rw.WriteHeader(fsthttp.StatusBadRequest)
@@ -44,6 +40,10 @@ func main() {
 		if err != nil {
 			rw.WriteHeader(fsthttp.StatusInternalServerError)
 			fmt.Fprintf(rw, "unable to get client ip %q\n", err)
+			return
+		}
+		if !strings.HasPrefix(req.URL.Path, "/wind") {
+			fmt.Fprintf(rw, rootHTML(g))
 			return
 		}
 		winds, err := fetchWinds(ctx, g)
@@ -150,4 +150,17 @@ func toHTML(winds []wind, g *geo.Geo) string {
 	</body>
 	</html>`, g.Latitude, g.Longitude, strings.Join(ss, "\n"))
 
+}
+
+func rootHTML(g *geo.Geo) string {
+	return fmt.Sprintf(`<html>
+	<head><title>Winds at lat: %.2[1]f, long: %.2[2]f</title></head>
+	<body>
+	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
+	<ul>
+	<li><a href="/wind.html">Winds HTML</a></li>
+	<li><a href="/wind.json">Winds JSON</a></li>
+	</ul>
+	</body>
+	</html>`, g.Latitude, g.Longitude)
 }

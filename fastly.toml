@@ -3,7 +3,7 @@ description = "Gets, wind info from API and publishes it"
 language = "go"
 manifest_version = 2
 name = "windy"
-service_id = ""
+service_id = "N2cpeMRzh0EgYS6vAn4yV6"
 
 [local_server]
 
