@@ -70,6 +70,7 @@ func fetchWinds(ctx context.Context, g *geo.Geo) ([]wind, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("%s\n", string(body))
 	times := parseString(body, "time")
 	speeds := parseFloat(body, "windspeed_10m")
 	gusts := parseFloat(body, "windgusts_10m")
@@ -136,25 +137,65 @@ func toJSON(winds []wind) string {
 }
 
 func toHTML(winds []wind, g *geo.Geo) string {
-	ss := []string{}
-	for _, w := range winds {
-		ss = append(ss, fmt.Sprintf(`<li><strong>%s:</strong> %.2f (%.2f)</li>`, w.hour, w.speed, w.gust))
-	}
+	times := mapSlice(winds, func(w wind) string {
+		return fmt.Sprintf("%q", w.hour)
+	})
+	speeds := mapSlice(winds, func(w wind) string {
+		return fmt.Sprintf("%.2f", w.speed)
+	})
+	gusts := mapSlice(winds, func(w wind) string {
+		return fmt.Sprintf("%.2f", w.gust)
+	})
+	timeStr := fmt.Sprintf("var times = [ %s ];", strings.Join(times, ", "))
+	speedStr := fmt.Sprintf("var speeds = [ %s ];", strings.Join(speeds, ", "))
+	gustStr := fmt.Sprintf("var gusts = [ %s ];", strings.Join(gusts, ", "))
 	return fmt.Sprintf(`<html>
-	<head><title>Winds at lat: %.2[1]f, long: %.2[2]f</title></head>
+	<head>
+	<title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	</head>
 	<body>
 	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
-	<ul>
-	%[3]s
-	</ul>
+	<canvas id="myChart" style="width:90%%;max-width:1024px;margin:1em"></canvas>
+
+<script>
+%[3]s
+%[4]s
+%[5]s
+new Chart("myChart", {
+  type: "line",
+  data: {
+	  labels: times,
+	  datasets: [{
+		  label: "Average",
+		  data: speeds,
+		  borderColor: "green",
+		  fill: false
+	  },{
+		  label: "Gust",
+		  data: gusts,
+		  borderColor: "red",
+		  fill: false
+	  }]
+  },
+  options: {
+	  title: {
+		  display: true,
+		  text: 'Wind speeds for %.2[1]f %.2[2]f'
+	  }
+  }
+});
+</script>
 	</body>
-	</html>`, g.Latitude, g.Longitude, strings.Join(ss, "\n"))
+	</html>`, g.Latitude, g.Longitude, timeStr, speedStr, gustStr)
 
 }
 
 func rootHTML(g *geo.Geo) string {
 	return fmt.Sprintf(`<html>
-	<head><title>Winds at lat: %.2[1]f, long: %.2[2]f</title></head>
+	<head>
+	<title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
+	</head>
 	<body>
 	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
 	<ul>
@@ -163,4 +204,12 @@ func rootHTML(g *geo.Geo) string {
 	</ul>
 	</body>
 	</html>`, g.Latitude, g.Longitude)
+}
+
+func mapSlice[T any, M any](a []T, f func(T) M) []M {
+	n := make([]M, len(a))
+	for i, e := range a {
+		n[i] = f(e)
+	}
+	return n
 }
