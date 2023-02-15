@@ -12,3 +12,6 @@ service_id = "N2cpeMRzh0EgYS6vAn4yV6"
     [local_server.backends."open-meteo"]
       url = "https://api.open-meteo.com/"
 
+	[local_server.backends."elpris"]
+	  url = "https://www.elprisetjustnu.se/"
+
