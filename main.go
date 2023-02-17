@@ -50,7 +50,6 @@ func main() {
 		}
 		entries, err := fetchWinds(ctx, g)
 		prices, err := fetchPrices(ctx, "SE4")
-		fmt.Println(entries, prices)
 		merge(entries, prices)
 		if err != nil {
 			rw.WriteHeader(fsthttp.StatusBadGateway)
@@ -118,7 +117,6 @@ func merge(entries, prices []*entry) {
 				e.price = p.price
 				break
 			}
-			fmt.Println(e.price)
 		}
 	}
 }
