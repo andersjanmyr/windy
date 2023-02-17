@@ -213,7 +213,12 @@ func toJSON(entries []*entry) string {
 
 func toHTML(entries []*entry, g *geo.Geo) string {
 	times := mapSlice(entries, func(e *entry) string {
-		return fmt.Sprintf("%q", e.hour)
+		d, t, _ := strings.Cut(e.hour, "T")
+		h := t
+		if t == "00:00" {
+			h = d
+		}
+		return fmt.Sprintf("%q", h)
 	})
 	speeds := mapSlice(entries, func(e *entry) string {
 		return fmt.Sprintf("%.2f", e.speed)
