@@ -237,6 +237,7 @@ func toHTML(entries []*entry, g *geo.Geo) string {
 	<head>
 	<title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
 	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
@@ -286,7 +287,8 @@ new Chart("myChart", {
 func rootHTML(g *geo.Geo) string {
 	return fmt.Sprintf(`<html>
 	<head>
-	<title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
+	  <title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
 	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
