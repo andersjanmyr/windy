@@ -287,17 +287,17 @@ new Chart("myChart", {
 func rootHTML(g *geo.Geo) string {
 	return fmt.Sprintf(`<html>
 	<head>
-	  <title>Winds at lat: %.2[1]f, long: %.2[2]f</title>
+	  <title>Winds in %[1]s, %[2]s (lat: %.2[3]f, long: %.2[4]f)</title>
       <meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
 	<body>
-	<h1>Winds at lat: %.2[1]f, long: %.2[2]f</h1>
+	<h1>Winds in %[1]s, %[2]s (lat: %.2[3]f, long: %.2[4]f)</h1>
 	<ul>
 	<li><a href="/wind.html">Winds HTML</a></li>
 	<li><a href="/wind.json">Winds JSON</a></li>
 	</ul>
 	</body>
-	</html>`, g.Latitude, g.Longitude)
+	</html>`, g.City, g.CountryName, g.Latitude, g.Longitude)
 }
 
 func mapSlice[T any, M any](a []T, f func(T) M) []M {
