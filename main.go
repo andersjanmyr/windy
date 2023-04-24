@@ -48,7 +48,13 @@ func main() {
 			fmt.Fprintf(rw, rootHTML(g))
 			return
 		}
-		entries, err := fetchWinds(ctx, g)
+		lat := req.URL.Query().Get("lat")
+		long := req.URL.Query().Get("long")
+		if lat == "" || long == "" {
+			lat, long = fmt.Sprintf("%f", g.Latitude), fmt.Sprintf("%f", g.Longitude)
+		}
+		fmt.Println("latlong", lat, long)
+		entries, err := fetchWinds(ctx, lat, long)
 		prices, err := fetchPrices(ctx, "SE4")
 		merge(entries, prices)
 		if err != nil {
@@ -56,7 +62,7 @@ func main() {
 			fmt.Fprintln(rw, err)
 			return
 		}
-		if req.URL.Path == "/wind.json" || req.URL.Path == "/wind" {
+		if req.URL.Path == "/wind.json" {
 			rw.Header().Set("Content-Type", "application/json")
 			fmt.Fprintf(rw, "%s\n", toJSON(entries))
 		}
@@ -69,8 +75,8 @@ func main() {
 	})
 }
 
-func fetchWinds(ctx context.Context, g *geo.Geo) ([]*entry, error) {
-	body, err := sendRequest(ctx, "windspeed_10m,windgusts_10m", g)
+func fetchWinds(ctx context.Context, lat, long string) ([]*entry, error) {
+	body, err := sendRequest(ctx, "windspeed_10m,windgusts_10m", lat, long)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +99,8 @@ func fetchWinds(ctx context.Context, g *geo.Geo) ([]*entry, error) {
 	return entries, nil
 }
 
-func sendRequest(ctx context.Context, prop string, g *geo.Geo) ([]byte, error) {
-	u := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&windspeed_unit=ms&timezone=CET&hourly=%s", g.Latitude, g.Longitude, prop)
+func sendRequest(ctx context.Context, prop, lat, long string) ([]byte, error) {
+	u := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%.2s&longitude=%.2s&windspeed_unit=ms&timezone=CET&hourly=%s", lat, long, prop)
 	fmt.Println(u)
 	req, _ := fsthttp.NewRequest("GET", u, nil)
 	req.CacheOptions.TTL = 60 * 60 * 1 // 1 hour
@@ -296,12 +302,28 @@ func rootHTML(g *geo.Geo) string {
 	<head>
 	  <title>%[1]s</title>
       <meta name="viewport" content="width=device-width, initial-scale=1">
+	  <script>
+	  function addGeo(link, coords) {
+		  link.href = link.href + "?lat=" + coords.latitude + "&long=" + coords.longitude;
+	  }
+		if ("geolocation" in navigator) {
+			  navigator.geolocation.getCurrentPosition((position) => {
+				  const lat = position.coords.latitude;
+				  const long = position.coords.longitude;
+				  console.log("pos", lat, long);
+				  const links = document.getElementsByClassName("wind");
+				  console.log(links);
+				  addGeo(links[0], position.coords)
+				  addGeo(links[1], position.coords)
+			  });
+		}
+		</script>
 	</head>
 	<body>
 	<h1>%[1]s</h1>
 	<ul>
-	<li><a href="/wind.html">Winds HTML</a></li>
-	<li><a href="/wind.json">Winds JSON</a></li>
+	<li><a class="wind" href="/wind.html">Winds HTML</a></li>
+	<li><a class="wind" href="/wind.json">Winds JSON</a></li>
 	</ul>
 	</body>
 	</html>`, title(g),
