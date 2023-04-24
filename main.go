@@ -68,7 +68,7 @@ func main() {
 		}
 		if req.URL.Path == "/wind.html" {
 			rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-			fmt.Fprintf(rw, "%s\n", toHTML(entries, g))
+			fmt.Fprintf(rw, "%s\n", toHTML(entries, g, lat, long))
 
 			return
 		}
@@ -216,7 +216,7 @@ func toJSON(entries []*entry) string {
 	return fmt.Sprintf("[\n%s\n]\n", strings.Join(ss, ",\n"))
 }
 
-func toHTML(entries []*entry, g *geo.Geo) string {
+func toHTML(entries []*entry, g *geo.Geo, lat, long string) string {
 	times := mapSlice(entries, func(e *entry) string {
 		d, t, _ := strings.Cut(e.hour, "T")
 		h := t
@@ -286,12 +286,15 @@ new Chart("myChart", {
 </script>
 	</body>
 	</html>`,
-		title(g),
+		title(g, lat, long),
 		timeStr, speedStr, gustStr, priceStr)
 
 }
 
-func title(g *geo.Geo) string {
+func title(g *geo.Geo, lat, long string) string {
+	if lat != "" && long != "" {
+		return fmt.Sprintf("Winds at browser location (lat: %.5[1]s, long: %.5[2]s)", lat, long)
+	}
 	return fmt.Sprintf("Winds in %[1]s, %[2]s (lat: %.2[3]f, long: %.2[4]f)",
 		strings.Title(g.City), strings.Title(g.CountryName), g.Latitude, g.Longitude,
 	)
@@ -326,7 +329,7 @@ func rootHTML(g *geo.Geo) string {
 	<li><a class="wind" href="/wind.json">Winds JSON</a></li>
 	</ul>
 	</body>
-	</html>`, title(g),
+	</html>`, title(g, "", ""),
 	)
 }
 
